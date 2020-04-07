@@ -11,6 +11,7 @@ type RuntimeConfig struct {
 	QueueUrl   string `envcfg:"URL"`
 	Region     string `envcfg:"REGION"`
 	ShowConfig bool
+	Verbose    bool
 }
 
 // override with environment variables if present
@@ -38,6 +39,7 @@ func BuildRuntimeConfig() *RuntimeConfig {
 		defaultNone = ""
 		regHelp     = "aws region. env: SQUAT_REGION"
 		showHelp    = "show parsed config, vars and env, and exit"
+		verboseHelp = "be a bit louder about what is happening"
 	)
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr,
@@ -52,6 +54,7 @@ func BuildRuntimeConfig() *RuntimeConfig {
 	cfg := &RuntimeConfig{}
 	flag.StringVar(&cfg.Region, "region", defaultNone, regHelp)
 	flag.BoolVar(&cfg.ShowConfig, "config", false, showHelp)
+	flag.BoolVar(&cfg.Verbose, "verbose", false, verboseHelp)
 	flag.Parse()
 	// override from env
 	parseEnv(cfg)

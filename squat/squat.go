@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -16,6 +17,7 @@ import (
 type Squat struct {
 	client   *sqs.SQS
 	queueUrl string
+	verbose  bool
 }
 
 // begins reading from stdin
@@ -24,26 +26,31 @@ func (sq *Squat) Run() {
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		s := scanner.Text()
-        err := sq.putrec(s)
-        if err != nil {
-            fmt.Fprintf(os.Stderr, "ERR: %s", err)
-        }
+		if sq.verbose {
+			fmt.Printf("sqs: %s\n", s)
+		}
+		err := sq.putrec(s)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "ERR: %s", err)
+		}
 	}
 }
 
 // put record to kinesis
 func (sq *Squat) putrec(data string) error {
-	// completely heenky dedup token creation
-	tok := Int64ToStr(rand.Int63())
-	dedup := "sqt" + tok + "-" + Int64ToStr(time.Now().UnixNano())
 	send_params := &sqs.SendMessageInput{
-		MessageBody:            aws.String(data),
-		QueueUrl:               aws.String(sq.queueUrl), // Required
-        // required for fifo queues
-		MessageGroupId:         aws.String("squat"),
-		MessageDeduplicationId: aws.String(dedup),
+		MessageBody: aws.String(data),
+		QueueUrl:    aws.String(sq.queueUrl), // Required
+		// required for fifo queues
 	}
-	_,err := sq.client.SendMessage(send_params)
+	if strings.HasSuffix(sq.queueUrl, ".fifo") {
+		// completely heenky dedup token creation
+		tok := Int64ToStr(rand.Int63())
+		dedup := "sqt" + tok + "-" + Int64ToStr(time.Now().UnixNano())
+		send_params.MessageGroupId = aws.String("squat")
+		send_params.MessageDeduplicationId = aws.String(dedup)
+	}
+	_, err := sq.client.SendMessage(send_params)
 	return err
 }
 
@@ -63,5 +70,6 @@ func NewSquat(cfg *RuntimeConfig) (*Squat, error) {
 	return &Squat{
 		client:   sqs.New(sess),
 		queueUrl: cfg.QueueUrl,
+		verbose:  cfg.Verbose,
 	}, nil
 }
