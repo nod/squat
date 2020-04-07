@@ -14,36 +14,36 @@ import (
 )
 
 type Squat struct {
-	client       *sqs.SQS
-	queueUrl   string
+	client   *sqs.SQS
+	queueUrl string
 }
 
 // begins reading from stdin
+// TODO abstract this to accept the source as arg
 func (sq *Squat) Run() {
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		s := scanner.Text()
-		sq.putrec(s)
-		fmt.Println(s)
+        err := sq.putrec(s)
+        if err != nil {
+            fmt.Fprintf(os.Stderr, "ERR: %s", err)
+        }
 	}
 }
 
 // put record to kinesis
 func (sq *Squat) putrec(data string) error {
-	// Send message
+	// completely heenky dedup token creation
 	tok := Int64ToStr(rand.Int63())
-	dedup := "sqt"+tok +"-"+Int64ToStr(time.Now().UnixNano())
+	dedup := "sqt" + tok + "-" + Int64ToStr(time.Now().UnixNano())
 	send_params := &sqs.SendMessageInput{
-		MessageBody:  aws.String(data),
-		QueueUrl:     aws.String(sq.queueUrl),       // Required
-		MessageGroupId: aws.String("squat"),  // required for fifo queues
+		MessageBody:            aws.String(data),
+		QueueUrl:               aws.String(sq.queueUrl), // Required
+        // required for fifo queues
+		MessageGroupId:         aws.String("squat"),
 		MessageDeduplicationId: aws.String(dedup),
 	}
-	send_resp, err := sq.client.SendMessage(send_params)
-	if err != nil {
-		return err
-	}
-	fmt.Printf("[Send message] \n%v \n\n", send_resp)
+	_,err := sq.client.SendMessage(send_params)
 	return err
 }
 

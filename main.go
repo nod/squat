@@ -6,7 +6,6 @@
   - reads from stdin and emits aws sqs messages
 **/
 
-
 package main
 
 import (
@@ -19,7 +18,6 @@ import (
 func main() {
 	cfg := squat.BuildRuntimeConfig()
 	sq, err := squat.NewSquat(cfg)
-
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "ERR %s", err)
 		os.Exit(1)

@@ -9,8 +9,8 @@ import (
 
 type RuntimeConfig struct {
 	QueueUrl   string `envcfg:"URL"`
-	Region       string `envcfg:"REGION"`
-	ShowConfig   bool
+	Region     string `envcfg:"REGION"`
+	ShowConfig bool
 }
 
 // override with environment variables if present
@@ -51,7 +51,6 @@ func BuildRuntimeConfig() *RuntimeConfig {
 	}
 	cfg := &RuntimeConfig{}
 	flag.StringVar(&cfg.Region, "region", defaultNone, regHelp)
-	flag.StringVar(&cfg.Region, "r", defaultNone, regHelp+" (shortform)")
 	flag.BoolVar(&cfg.ShowConfig, "config", false, showHelp)
 	flag.Parse()
 	// override from env
