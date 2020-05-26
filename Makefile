@@ -49,8 +49,7 @@ build/squat-macos-amd64: $(GOFILES)
 	GOOS=darwin GOARCH=amd64 go build -ldflags "-X main.version=$(VER)" -mod=vendor -o build/squat-macos-amd64 main.go
 
 build/squat-linux-arm64: $(GOFILES)
-	GOOS=linux GOARCH=amd64 go build -ldflags "-X main.version=$(VER)" -mod=vendor -o build/squat-linux-arm64  main.go
-
+	GOOS=linux GOARCH=arm64 go build -ldflags "-X main.version=$(VER)" -mod=vendor -o build/squat-linux-arm64  main.go
 
 tagproj:
 	git tag -a v`cat VERSION`
